@@ -1,33 +1,36 @@
-// This plugin will open a window to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
+figma.showUI(__html__, { width: 400, height: 400 });
 
-// This file holds the main code for the plugins. It has access to the *document*.
-// You can access browser APIs in the <script> tag inside "ui.html" which has a
-// full browser environment (see documentation).
+figma.ui.onmessage = async (msg) => {
+    if (msg.type === 'create-tokens') {
+        const tokens = JSON.parse(msg.json);
+        const collectionName = msg.collectionName || 'Design Tokens';
 
-// This shows the HTML page in "ui.html".
-figma.showUI(__html__);
+        const collection = figma.variables.createVariableCollection(collectionName);
+        const defaultModeId = collection.defaultModeId;
 
-// Calls to "parent.postMessage" from within the HTML page will trigger this
-// callback. The callback will be passed the "pluginMessage" property of the
-// posted message.
-figma.ui.onmessage = msg => {
-  // One way of distinguishing between different types of messages sent from
-  // your HTML page is to use an object with a "type" property like this.
-  if (msg.type === 'create-rectangles') {
-    const nodes: SceneNode[] = [];
-    for (let i = 0; i < msg.count; i++) {
-      const rect = figma.createRectangle();
-      rect.x = i * 150;
-      rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-      figma.currentPage.appendChild(rect);
-      nodes.push(rect);
+        for (const [name, value] of Object.entries(tokens)) {
+            if (typeof value === 'string' && value.startsWith('#')) {
+                const colorVariable = figma.variables.createVariable(name, collection.id, "COLOR");
+                colorVariable.setValueForMode(defaultModeId, {
+                    r: parseInt(value.slice(1, 3), 16) / 255,
+                    g: parseInt(value.slice(3, 5), 16) / 255,
+                    b: parseInt(value.slice(5, 7), 16) / 255,
+                    a: 1
+                });
+            }
+            // Add handling for other types of tokens here...
+        }
+
+        figma.ui.postMessage({ type: 'tokens-created' });
     }
-    figma.currentPage.selection = nodes;
-    figma.viewport.scrollAndZoomIntoView(nodes);
-  }
-
-  // Make sure to close the plugin when you're done. Otherwise the plugin will
-  // keep running, which shows the cancel button at the bottom of the screen.
-  figma.closePlugin();
 };
+// const collectionId = "VariableCollectionId:2:1093"; // Remplacez ceci par votre ID de collection
+// const collection = figma.variables.getVariableCollectionById(collectionId);
+
+// if (collection) {
+//   const variableIds = collection.variableIds;
+//   for (const id of variableIds) {
+//     const variable = figma.variables.getVariableById(id);
+//     console.log(variable);
+//   }
+// }

@@ -1,17 +1,41 @@
-<h2>Rectangle Creator</h2>
-<p>Count: <input id="count" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
-<script>
+<!DOCTYPE html>
+<html>
 
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*')
-}
+<head>
+    <style>
+        textarea {
+            width: 90%;
+            height: 70vh;
+        }
+        
+        button {
+            margin-top: 1em;
+        }
+    </style>
+</head>
 
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
+<body>
+    <input id="collection-name" placeholder="Enter collection name">
+    <textarea id="json-input"></textarea>
+    <button id="convert-button">Convert to Figma Variables</button>
+    <script>
+        document.getElementById('convert-button').onclick = () => {
+            const json = document.getElementById('json-input').value;
+            const collectionName = document.getElementById('collection-name').value;
+            parent.postMessage({
+                pluginMessage: {
+                    type: 'create-tokens',
+                    json,
+                    collectionName
+                }
+            }, '*');
+        };
+        window.onmessage = (event) => {
+            if (event.data.pluginMessage.type === 'tokens-created') {
+                alert('Tokens have been successfully created!');
+            }
+        };
+    </script>
+</body>
 
-</script>
+</html>
